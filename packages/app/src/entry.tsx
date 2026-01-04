@@ -1,8 +1,11 @@
 // @refresh reload
 import { render } from "solid-js/web"
+import { registerSW } from "virtual:pwa-register"
 import { App } from "@/app"
 import { Platform, PlatformProvider } from "@/context/platform"
 import pkg from "../package.json"
+
+registerSW({ immediate: true })
 
 const root = document.getElementById("root")
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
