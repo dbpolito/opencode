@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "OpenCode",
+  "identifier": "ai.opencode.mobile",
+  "version": "../package.json",
+  "build": {
+    "beforeDevCommand": "bun run dev",
+    "devUrl": "http://192.168.1.179:1430",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "OpenCode",
+        "fullscreen": false,
+        "resizable": true,
+        "url": "/"
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "iOS": {
+      "minimumSystemVersion": "14.0"
+    }
+  }
+}
