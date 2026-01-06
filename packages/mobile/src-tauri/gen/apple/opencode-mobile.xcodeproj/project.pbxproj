@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -12,6 +12,7 @@
 		21FC01D2255477715B3CD805 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9D58604176860CD9127C64F2 /* QuartzCore.framework */; };
 		299823A56ED4CDCBB9964201 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D5F1E7207A274680D58DB5F6 /* LaunchScreen.storyboard */; };
 		4A82A373AC965A4D4C55D982 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA6C3884AA1BF067605DD888 /* Assets.xcassets */; };
+		6762BE7BEC5A6344A2201C2D /* libapp.a in Resources */ = {isa = PBXBuildFile; fileRef = 134CFEA954E5F26164133B41 /* libapp.a */; };
 		6F3378A7295321BC922115DF /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A91C71E61810DC840FB7F2F5 /* WebKit.framework */; };
 		9AB4E5DCF831F3850AE43555 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 847DA00FC96BB22C715D9BBB /* UIKit.framework */; };
 		B3C0B9913661AF05A4F11E55 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 659C2CD64F995D1B451DF0FF /* CoreGraphics.framework */; };
@@ -23,10 +24,11 @@
 
 /* Begin PBXFileReference section */
 		0502492152779FA22CB8519E /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		134CFEA954E5F26164133B41 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
 		41B5E59252CAFCF94A177BEA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		564665752062BECDD0BD3645 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		58E52A6E3325B3864D3AAAAE /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
-		63CBA7661A4D744E676C03D7 /* lib.rs */ = {isa = PBXFileReference; path = lib.rs; sourceTree = "<group>"; };
+		63CBA7661A4D744E676C03D7 /* lib.rs */ = {isa = PBXFileReference; lastKnownFileType = text; path = lib.rs; sourceTree = "<group>"; };
 		659C2CD64F995D1B451DF0FF /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		847DA00FC96BB22C715D9BBB /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		9B0D0D010D8173CCC581C935 /* libapp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libapp.a; sourceTree = "<group>"; };
@@ -38,7 +40,7 @@
 		E38F0A2CFF6E2504CD11772D /* opencode-mobile_iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "opencode-mobile_iOS.entitlements"; sourceTree = "<group>"; };
 		FABF075EFDD23C7B79AF93ED /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		FCBDB8E6AD8C08262106E20C /* bindings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bindings.h; sourceTree = "<group>"; };
-		FD6A82136BB8819C7DBD1251 /* opencode-mobile_iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "opencode-mobile_iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FD6A82136BB8819C7DBD1251 /* OpenCode.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenCode.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,7 +73,7 @@
 		11D9994E2B7601EF1F9ED8AA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FD6A82136BB8819C7DBD1251 /* opencode-mobile_iOS.app */,
+				FD6A82136BB8819C7DBD1251 /* OpenCode.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -109,11 +111,28 @@
 			);
 			sourceTree = "<group>";
 		};
+		8FE9D77E5B6930F3D1084DB2 /* debug */ = {
+			isa = PBXGroup;
+			children = (
+				134CFEA954E5F26164133B41 /* libapp.a */,
+			);
+			path = debug;
+			sourceTree = "<group>";
+		};
 		AF7FEEE3A0D7445661045C49 /* Externals */ = {
 			isa = PBXGroup;
 			children = (
+				BA1B400E49367ABA07A61C99 /* arm64 */,
 			);
 			path = Externals;
+			sourceTree = "<group>";
+		};
+		BA1B400E49367ABA07A61C99 /* arm64 */ = {
+			isa = PBXGroup;
+			children = (
+				8FE9D77E5B6930F3D1084DB2 /* debug */,
+			);
+			path = arm64;
 			sourceTree = "<group>";
 		};
 		C937948A2DB1867F41D2A199 /* Frameworks */ = {
@@ -168,7 +187,7 @@
 			packageProductDependencies = (
 			);
 			productName = "opencode-mobile_iOS";
-			productReference = FD6A82136BB8819C7DBD1251 /* opencode-mobile_iOS.app */;
+			productReference = FD6A82136BB8819C7DBD1251 /* OpenCode.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -190,7 +209,6 @@
 			);
 			mainGroup = 4E0AAE0DC9C4702F3222E8BE;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -207,6 +225,7 @@
 				4A82A373AC965A4D4C55D982 /* Assets.xcassets in Resources */,
 				299823A56ED4CDCBB9964201 /* LaunchScreen.storyboard in Resources */,
 				D0BD0F5B362DAEFA82E4F14C /* assets in Resources */,
+				6762BE7BEC5A6344A2201C2D /* libapp.a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -252,12 +271,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ARCHS = (
-					arm64,
-				);
+				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "opencode-mobile_iOS/opencode-mobile_iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = XGHCGW82KZ;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -269,9 +287,21 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)";
-				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = ai.opencode.mobile;
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = ai.opencode.mobile.danielpolito;
 				PRODUCT_NAME = "OpenCode";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -339,12 +369,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				ARCHS = (
-					arm64,
-				);
+				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "opencode-mobile_iOS/opencode-mobile_iOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = XGHCGW82KZ;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphoneos*]" = x86_64;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -356,9 +385,21 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)";
-				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME) $(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = ai.opencode.mobile;
+				"LIBRARY_SEARCH_PATHS[arch=arm64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION)",
+					"$(SDKROOT)/usr/lib/swift",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift/$(PLATFORM_NAME)",
+					"$(TOOLCHAIN_DIR)/usr/lib/swift-5.0/$(PLATFORM_NAME)",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = ai.opencode.mobile.danielpolito;
 				PRODUCT_NAME = "OpenCode";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
