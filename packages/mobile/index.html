@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" style="height: 100%">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -8,13 +8,16 @@
     />
     <title>OpenCode</title>
     <style>
-      html,
-      body,
-      #root,
-      #root > div {
+      body {
+        box-sizing: border-box;
+        height: 100vh;
+        padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+      }
+
+      #root, #root > div {
         height: 100%;
-        margin: 0;
-        padding: 0;
+        overflow: hidden;
+
       }
     </style>
   </head>

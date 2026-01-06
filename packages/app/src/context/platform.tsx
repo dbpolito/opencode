@@ -3,7 +3,7 @@ import { AsyncStorage, SyncStorage } from "@solid-primitives/storage"
 
 export type Platform = {
   /** Platform discriminator */
-  platform: "web" | "desktop"
+  platform: "web" | "desktop" | "tauri"
 
   /** App version */
   version?: string

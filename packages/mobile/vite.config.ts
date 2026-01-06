@@ -21,7 +21,7 @@ export default defineConfig({
     host,
     hmr: {
       protocol: "ws",
-      host: process.env.TAURI_DEV_HOST || "localhost",
+      host: process.env.TAURI_DEV_HOST || serverHost,
       port: 1431,
     },
     watch: {

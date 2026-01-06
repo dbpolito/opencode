@@ -60,6 +60,10 @@ const platform: Platform = {
     void shellOpen(url).catch(() => undefined)
   },
 
+  async restart() {
+    window.location.reload()
+  },
+
   storage: (name = "default.dat") => {
     type StoreLike = {
       get(key: string): Promise<string | null | undefined>
@@ -144,8 +148,8 @@ const platform: Platform = {
       .catch(() => undefined)
   },
 
-  // @ts-expect-error
-  fetch: tauriFetch,
+  // Use native fetch - tauriFetch doesn't support SSE streams properly
+  fetch: window.fetch.bind(window),
 }
 
 render(() => {

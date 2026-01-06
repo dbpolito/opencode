@@ -11,7 +11,8 @@
     "tauri": "tauri",
     "ios:init": "tauri ios init",
     "ios:dev": "tauri ios dev",
-    "ios:build": "tauri ios build"
+    "ios:build": "tauri ios build",
+    "ios:deploy": "bun run build && tauri ios build --debug && xcrun devicectl device install app --device 00008140-0014682C2241801C src-tauri/gen/apple/build/arm64/OpenCode.ipa && xcrun devicectl device process launch --device 00008140-0014682C2241801C ai.opencode.mobile.danielpolito"
   },
   "dependencies": {
     "@opencode-ai/app": "workspace:*",
