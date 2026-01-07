@@ -1,16 +1,16 @@
 // @refresh reload
 import { render } from "solid-js/web"
-import { App, PlatformProvider, Platform } from "@opencode-ai/app"
+import { AppBaseProviders, AppInterface, PlatformProvider, Platform } from "@opencode-ai/app"
 import { open, save } from "@tauri-apps/plugin-dialog"
 import { openUrl as shellOpen } from "@tauri-apps/plugin-opener"
 import { AsyncStorage } from "@solid-primitives/storage"
-import { fetch as tauriFetch } from "@tauri-apps/plugin-http"
 import { Store } from "@tauri-apps/plugin-store"
-import { isPermissionGranted, requestPermission } from "@tauri-apps/plugin-notification"
+import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification"
 
 // For mobile, inject the server URL via query parameter
 // The app.tsx checks for ?url= parameter first
-const serverUrl = `http://${import.meta.env.VITE_OPENCODE_SERVER_HOST ?? "192.168.1.179"}:${import.meta.env.VITE_OPENCODE_SERVER_PORT ?? "4096"}`
+// Set OPENCODE_SERVER_HOST env var to your Mac's IP for physical device testing
+const serverUrl = `http://${import.meta.env.VITE_OPENCODE_SERVER_HOST ?? "localhost"}:${import.meta.env.VITE_OPENCODE_SERVER_PORT ?? "4096"}`
 
 // Add the server URL as a query parameter so app.tsx picks it up
 if (!window.location.search.includes("url=")) {
@@ -27,7 +27,7 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 }
 
 const platform: Platform = {
-  platform: "tauri",
+  platform: "desktop",
   version: "0.0.1",
 
   async openDirectoryPickerDialog(opts) {
@@ -64,7 +64,7 @@ const platform: Platform = {
     window.location.reload()
   },
 
-  storage: (name = "default.dat") => {
+  storage: (() => {
     type StoreLike = {
       get(key: string): Promise<string | null | undefined>
       set(key: string, value: string): Promise<unknown>
@@ -74,7 +74,11 @@ const platform: Platform = {
       length(): Promise<number>
     }
 
-    const memory = () => {
+    const storeCache = new Map<string, Promise<StoreLike>>()
+    const apiCache = new Map<string, AsyncStorage>()
+    const memoryCache = new Map<string, StoreLike>()
+
+    const createMemoryStore = () => {
       const data = new Map<string, string>()
       const store: StoreLike = {
         get: async (key) => data.get(key),
@@ -93,59 +97,78 @@ const platform: Platform = {
       return store
     }
 
-    const api: AsyncStorage & { _store: Promise<StoreLike> | null; _getStore: () => Promise<StoreLike> } = {
-      _store: null,
-      _getStore: async () => {
-        if (api._store) return api._store
-        api._store = Store.load(name).catch(() => memory())
-        return api._store
-      },
-      getItem: async (key: string) => {
-        const store = await api._getStore()
-        const value = await store.get(key).catch(() => null)
-        if (value === undefined) return null
-        return value
-      },
-      setItem: async (key: string, value: string) => {
-        const store = await api._getStore()
-        await store.set(key, value).catch(() => undefined)
-      },
-      removeItem: async (key: string) => {
-        const store = await api._getStore()
-        await store.delete(key).catch(() => undefined)
-      },
-      clear: async () => {
-        const store = await api._getStore()
-        await store.clear().catch(() => undefined)
-      },
-      key: async (index: number) => {
-        const store = await api._getStore()
-        return (await store.keys().catch(() => []))[index]
-      },
-      getLength: async () => {
-        const store = await api._getStore()
-        return await store.length().catch(() => 0)
-      },
-      get length() {
-        return api.getLength()
-      },
+    const getStore = (name: string) => {
+      const cached = storeCache.get(name)
+      if (cached) return cached
+
+      const store = Store.load(name).catch(() => {
+        const cached = memoryCache.get(name)
+        if (cached) return cached
+
+        const memory = createMemoryStore()
+        memoryCache.set(name, memory)
+        return memory
+      })
+
+      storeCache.set(name, store)
+      return store
     }
-    return api
-  },
+
+    const createStorage = (name: string): AsyncStorage => {
+      const api: AsyncStorage = {
+        getItem: async (key: string) => {
+          const store = await getStore(name)
+          const value = await store.get(key).catch(() => null)
+          if (value === undefined) return null
+          return value
+        },
+        setItem: async (key: string, value: string) => {
+          const store = await getStore(name)
+          await store.set(key, value).catch(() => undefined)
+        },
+        removeItem: async (key: string) => {
+          const store = await getStore(name)
+          await store.delete(key).catch(() => undefined)
+        },
+        clear: async () => {
+          const store = await getStore(name)
+          await store.clear().catch(() => undefined)
+        },
+        key: async (index: number) => {
+          const store = await getStore(name)
+          return (await store.keys().catch(() => []))[index]
+        },
+        getLength: async () => {
+          const store = await getStore(name)
+          return await store.length().catch(() => 0)
+        },
+        get length() {
+          return api.getLength()
+        },
+      }
+      return api
+    }
+
+    return (name = "default.dat") => {
+      const cached = apiCache.get(name)
+      if (cached) return cached
+
+      const api = createStorage(name)
+      apiCache.set(name, api)
+      return api
+    }
+  })(),
 
   notify: async (title, description) => {
     const granted = await isPermissionGranted().catch(() => false)
     const permission = granted ? "granted" : await requestPermission().catch(() => "denied")
     if (permission !== "granted") return
 
-    await Promise.resolve()
-      .then(() => {
-        new Notification(title, {
-          body: description ?? "",
-          icon: "https://opencode.ai/favicon-96x96.png",
-        })
-      })
-      .catch(() => undefined)
+    try {
+      sendNotification({ title, body: description ?? "" })
+    } catch {
+      // Notification failed silently
+    }
   },
 
   // Use native fetch - tauriFetch doesn't support SSE streams properly
@@ -155,7 +178,9 @@ const platform: Platform = {
 render(() => {
   return (
     <PlatformProvider value={platform}>
-      <App />
+      <AppBaseProviders>
+        <AppInterface />
+      </AppBaseProviders>
     </PlatformProvider>
   )
 }, root!)
