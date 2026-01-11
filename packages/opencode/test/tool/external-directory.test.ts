@@ -12,6 +12,7 @@ const baseCtx: Omit<Tool.Context, "ask"> = {
   agent: "build",
   abort: AbortSignal.any([]),
   metadata: () => {},
+  siblings: () => [],
 }
 
 describe("tool.assertExternalDirectory", () => {

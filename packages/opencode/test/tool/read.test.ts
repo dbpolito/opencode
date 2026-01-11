@@ -16,6 +16,7 @@ const ctx = {
   abort: AbortSignal.any([]),
   metadata: () => {},
   ask: async () => {},
+  siblings: () => [],
 }
 
 describe("tool.read external_directory permission", () => {

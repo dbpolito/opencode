@@ -13,6 +13,12 @@ export namespace Tool {
     agent?: Agent.Info
   }
 
+  export type Sibling = {
+    tool: string
+    callID: string
+    input: unknown
+  }
+
   export type Context<M extends Metadata = Metadata> = {
     sessionID: string
     messageID: string
@@ -22,6 +28,7 @@ export namespace Tool {
     extra?: { [key: string]: any }
     metadata(input: { title?: string; metadata?: M }): void
     ask(input: Omit<PermissionNext.Request, "id" | "sessionID" | "tool">): Promise<void>
+    siblings(): Sibling[]
   }
   export interface Info<Parameters extends z.ZodType = z.ZodType, M extends Metadata = Metadata> {
     id: string

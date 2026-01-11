@@ -42,6 +42,9 @@ export namespace SessionProcessor {
       partFromToolCall(toolCallID: string) {
         return toolcalls[toolCallID]
       },
+      siblings(toolCallID: string) {
+        return Object.values(toolcalls).filter((t) => t.callID !== toolCallID)
+      },
       async process(streamInput: LLM.StreamInput) {
         log.info("process")
         needsCompaction = false
