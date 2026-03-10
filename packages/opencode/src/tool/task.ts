@@ -25,6 +25,15 @@ const parameters = z.object({
 })
 
 export const TaskTool = Tool.define("task", async (ctx) => {
+  function parse(input: string) {
+    const text = input.trim().replace(/^\//, "")
+    const space = text.indexOf(" ")
+    return {
+      name: space === -1 ? text : text.slice(0, space),
+      args: space === -1 ? "" : text.slice(space + 1).trim(),
+    }
+  }
+
   const agents = await Agent.list().then((x) => x.filter((a) => a.mode !== "primary"))
 
   // Filter agents by permissions if agent provided
@@ -124,23 +133,40 @@ export const TaskTool = Tool.define("task", async (ctx) => {
       ctx.abort.addEventListener("abort", cancel)
       using _ = defer(() => ctx.abort.removeEventListener("abort", cancel))
       const promptParts = await SessionPrompt.resolvePromptParts(params.prompt)
+      const tools = {
+        todowrite: false,
+        todoread: false,
+        ...(hasTaskPermission ? {} : { task: false }),
+        ...Object.fromEntries((config.experimental?.primary_tools ?? []).map((t) => [t, false])),
+      }
+      const result = await (async () => {
+        if (params.command) {
+          const cmd = parse(params.command)
+          return SessionPrompt.command({
+            messageID,
+            sessionID: session.id,
+            agent: agent.name,
+            model: `${model.providerID}/${model.modelID}`,
+            command: cmd.name,
+            arguments: cmd.args,
+            tools,
+            subtask: false,
+            parts: promptParts.filter((part) => part.type === "text" || part.type === "file"),
+          })
+        }
 
-      const result = await SessionPrompt.prompt({
-        messageID,
-        sessionID: session.id,
-        model: {
-          modelID: model.modelID,
-          providerID: model.providerID,
-        },
-        agent: agent.name,
-        tools: {
-          todowrite: false,
-          todoread: false,
-          ...(hasTaskPermission ? {} : { task: false }),
-          ...Object.fromEntries((config.experimental?.primary_tools ?? []).map((t) => [t, false])),
-        },
-        parts: promptParts,
-      })
+        return SessionPrompt.prompt({
+          messageID,
+          sessionID: session.id,
+          model: {
+            modelID: model.modelID,
+            providerID: model.providerID,
+          },
+          agent: agent.name,
+          tools,
+          parts: promptParts,
+        })
+      })()
 
       const text = result.parts.findLast((x) => x.type === "text")?.text ?? ""
 

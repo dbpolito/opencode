@@ -209,3 +209,131 @@ describe("session.prompt agent variant", () => {
     }
   })
 })
+
+describe("session.prompt agent command", () => {
+  test("keeps raw text and records agent source", async () => {
+    await using tmp = await tmpdir({
+      git: true,
+      config: {
+        agent: {
+          build: {
+            model: "openai/gpt-5.2",
+          },
+        },
+      },
+    })
+
+    await Instance.provide({
+      directory: tmp.path,
+      fn: async () => {
+        const parts = await SessionPrompt.resolvePromptParts("before @general /test arg1 arg2\nafter")
+
+        expect(parts).toHaveLength(2)
+        expect(parts[0]).toEqual({ type: "text", text: "before @general /test arg1 arg2\nafter" })
+
+        const agentPart = parts[1]
+        expect(agentPart?.type).toBe("agent")
+        if (agentPart?.type === "agent") {
+          expect(agentPart.name).toBe("general")
+          expect(agentPart.source).toEqual({
+            value: "before @general /test arg1 arg2\nafter",
+            start: 7,
+            end: 15,
+          })
+        }
+      },
+    })
+  })
+
+  test("adds task hint from parsed inline agent commands", async () => {
+    await using tmp = await tmpdir({
+      git: true,
+      config: {
+        agent: {
+          build: {
+            model: "openai/gpt-5.2",
+          },
+        },
+      },
+    })
+
+    await Instance.provide({
+      directory: tmp.path,
+      fn: async () => {
+        const session = await Session.create({})
+        const parts = await SessionPrompt.resolvePromptParts("@general /review foo")
+
+        const msg = await SessionPrompt.prompt({
+          sessionID: session.id,
+          agent: "build",
+          noReply: true,
+          parts,
+        })
+
+        if (msg.info.role !== "user") throw new Error("expected user message")
+
+        const agentPart = msg.parts.find((p) => p.type === "agent")
+        expect(agentPart).toBeDefined()
+
+        const syntheticText = msg.parts.find((p) => p.type === "text" && p.synthetic)
+        expect(syntheticText).toBeDefined()
+        if (syntheticText?.type === "text") {
+          expect(syntheticText.text).toContain("/review foo")
+          expect(syntheticText.text).toContain('"command" parameter')
+        }
+
+        const commandText = msg.parts.find((p) => p.type === "text" && !p.synthetic)
+        expect(commandText).toBeDefined()
+        if (commandText?.type === "text") {
+          expect(commandText.text).toBe("@general /review foo")
+        }
+
+        await Session.remove(session.id)
+      },
+    })
+  })
+
+  test("keeps regular text when agent mention is not a command", async () => {
+    await using tmp = await tmpdir({
+      git: true,
+      config: {
+        agent: {
+          build: {
+            model: "openai/gpt-5.2",
+          },
+        },
+      },
+    })
+
+    await Instance.provide({
+      directory: tmp.path,
+      fn: async () => {
+        const session = await Session.create({})
+        const parts = await SessionPrompt.resolvePromptParts("@general help me with this task")
+
+        const msg = await SessionPrompt.prompt({
+          sessionID: session.id,
+          agent: "build",
+          noReply: true,
+          parts,
+        })
+
+        if (msg.info.role !== "user") throw new Error("expected user message")
+
+        const nonSyntheticText = msg.parts.find((p) => p.type === "text" && !p.synthetic)
+        expect(nonSyntheticText).toBeDefined()
+        if (nonSyntheticText?.type === "text") {
+          expect(nonSyntheticText.text).toBe("@general help me with this task")
+        }
+
+        const syntheticText = msg.parts.find((p) => p.type === "text" && p.synthetic)
+        expect(syntheticText).toBeDefined()
+        if (syntheticText?.type === "text") {
+          expect(syntheticText.text).not.toContain('"command" parameter')
+        }
+
+        await Session.remove(session.id)
+      },
+    })
+  })
+})

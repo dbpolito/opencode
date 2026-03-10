@@ -155,6 +155,12 @@ export namespace SessionPrompt {
   })
   export type PromptInput = z.infer<typeof PromptInput>
 
+  function agentCommand(input: string) {
+    const text = input.trimStart()
+    if (!text.startsWith("/")) return
+    return text.split(/\r?\n/, 1)[0]?.trim()
+  }
+
   export const prompt = fn(PromptInput, async (input) => {
     const session = await Session.get(input.sessionID)
     await SessionRevert.cleanup(session)
@@ -209,6 +215,11 @@ export namespace SessionPrompt {
             parts.push({
               type: "agent",
               name: agent.name,
+              source: {
+                value: template,
+                start: match.index ?? 0,
+                end: (match.index ?? 0) + match[0].length,
+              },
             })
           }
           return
@@ -985,8 +996,26 @@ export namespace SessionPrompt {
       id: part.id ?? Identifier.ascending("part"),
     })
 
+    const agentCommands = new Map<number, { textIndex?: number; value: string }>()
+    for (let i = 0; i < input.parts.length; i++) {
+      const part = input.parts[i]
+      if (part.type === "agent") {
+        const nextPart = input.parts[i + 1]
+        const next = nextPart?.type === "text" ? agentCommand(nextPart.text) : undefined
+        const value = next ?? (part.source ? agentCommand(part.source.value.slice(part.source.end)) : undefined)
+        if (!value) continue
+        agentCommands.set(i, {
+          value,
+          ...(next ? { textIndex: i + 1 } : {}),
+        })
+      }
+    }
+
     const parts = await Promise.all(
-      input.parts.map(async (part): Promise<Draft<MessageV2.Part>[]> => {
+      input.parts.map(async (part, index): Promise<Draft<MessageV2.Part>[]> => {
+        for (const [, cmdInfo] of agentCommands) {
+          if (index === cmdInfo.textIndex) return []
+        }
         if (part.type === "file") {
           // before checking the protocol we check if this is an mcp resource because it needs special handling
           if (part.source?.type === "resource") {
@@ -1263,6 +1292,11 @@ export namespace SessionPrompt {
           // Check if this agent would be denied by task permission
           const perm = PermissionNext.evaluate("task", part.name, agent.permission)
           const hint = perm.action === "deny" ? " . Invoked by user; guaranteed to exist." : ""
+          const cmd = agentCommands.get(index)?.value
+          const fullCmd = cmd ?? ""
+          const cmdHint = cmd
+            ? ` The user wants you to execute the "${fullCmd}" command in this subagent session. Set the "command" parameter in the task tool call to: "${fullCmd}".`
+            : ""
           return [
             {
               ...part,
@@ -1279,7 +1313,8 @@ export namespace SessionPrompt {
               text:
                 " Use the above message and context to generate a prompt and call the task tool with subagent: " +
                 part.name +
-                hint,
+                hint +
+                cmdHint,
             },
           ]
         }
@@ -1715,12 +1750,20 @@ NOTE: At any point in time through this workflow you should feel free to ask the
     sessionID: Identifier.schema("session"),
     agent: z.string().optional(),
     model: z.string().optional(),
+    tools: z.record(z.string(), z.boolean()).optional(),
     arguments: z.string(),
     command: z.string(),
+    subtask: z.boolean().optional(),
     variant: z.string().optional(),
     parts: z
       .array(
         z.discriminatedUnion("type", [
+          MessageV2.TextPart.omit({
+            messageID: true,
+            sessionID: true,
+          }).partial({
+            id: true,
+          }),
           MessageV2.FilePart.omit({
             messageID: true,
             sessionID: true,
@@ -1833,7 +1876,8 @@ NOTE: At any point in time through this workflow you should feel free to ask the
     }
 
     const templateParts = await resolvePromptParts(template)
-    const isSubtask = (agent.mode === "subagent" && command.subtask !== false) || command.subtask === true
+    const isSubtask =
+      input.subtask ?? ((agent.mode === "subagent" && command.subtask !== false) || command.subtask === true)
     const parts = isSubtask
       ? [
           {
@@ -1845,8 +1889,10 @@ NOTE: At any point in time through this workflow you should feel free to ask the
               providerID: taskModel.providerID,
               modelID: taskModel.modelID,
             },
-            // TODO: how can we make task tool accept a more complex input?
-            prompt: templateParts.find((y) => y.type === "text")?.text ?? "",
+            prompt: [...templateParts, ...(input.parts ?? [])]
+              .filter((part): part is { type: "text"; text: string } => part.type === "text")
+              .map((part) => part.text)
+              .join("\n\n"),
           },
         ]
       : [...templateParts, ...(input.parts ?? [])]
@@ -1873,6 +1919,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       messageID: input.messageID,
       model: userModel,
       agent: userAgent,
+      tools: input.tools,
       parts,
       variant: input.variant,
     })) as MessageV2.WithParts
