@@ -162,12 +162,16 @@ export const layer = Layer.effect(
         if (Flag.OPENCODE_PURE && cfg.plugin_origins?.length) {
           log.info("skipping external plugins in pure mode", { count: cfg.plugin_origins.length })
         }
-        if (plugins.length) yield* config.waitForDependencies()
 
         const loaded = yield* Effect.promise(() =>
           PluginLoader.loadExternal({
             items: plugins,
             kind: "server",
+            wait: async () => {
+              await Effect.runPromise(config.waitForDependencies()).catch((error) => {
+                log.warn("failed waiting for plugin dependencies", { error })
+              })
+            },
             report: {
               start(candidate) {
                 log.info("loading plugin", { path: candidate.plan.spec })
