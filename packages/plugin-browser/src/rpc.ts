@@ -60,8 +60,14 @@ export const Tab = Schema.Struct({
   canGoForward: Schema.Boolean,
   generation: count,
 }).annotate({ identifier: "Browser.Tab" })
+export const NetworkMode = Schema.Literals(["server", "desktop"])
+export type NetworkMode = typeof NetworkMode.Type
 export interface State extends Schema.Schema.Type<typeof State> {}
-export const State = Schema.Struct({ tabs: Schema.Array(Tab), focusedTabID: Schema.NullOr(TabID) }).annotate({
+export const State = Schema.Struct({
+  tabs: Schema.Array(Tab),
+  focusedTabID: Schema.NullOr(TabID),
+  network: optional(NetworkMode),
+}).annotate({
   identifier: "Browser.State",
 })
 export interface FileInfo extends Schema.Schema.Type<typeof FileInfo> {}
@@ -161,7 +167,7 @@ export const Operations = [
   ),
   operation(
     "tabs.open",
-    "Open a browser tab, show it in the Review pane, and select it. Defaults to about:blank. Website traffic uses the connected server's network; localhost reaches that server.",
+    "Open a browser tab, show it in the Review pane, and select it. Defaults to about:blank. Website traffic uses the user-selected server or desktop network. localhost reaches the selected machine; browser.tabs.list reports the active network.",
     {
       url: optional(short),
       focus: optional(Schema.Boolean).annotate({

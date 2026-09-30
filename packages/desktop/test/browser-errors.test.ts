@@ -20,6 +20,16 @@ test("navigation failures explain the server network and never recommend disabli
   expect(aborted.message).toContain("browser.files.list({tabID})")
 })
 
+test("desktop navigation failures identify desktop DNS and localhost", () => {
+  const action: Browser.Action = { type: "navigate", tabID, url: "http://local.test" }
+  expect(browserFailure(action, new Error("net::ERR_CONNECTION_REFUSED"), "desktop").message).toContain(
+    "localhost means the desktop",
+  )
+  expect(browserFailure(action, new Error("net::ERR_NAME_NOT_RESOLVED"), "desktop").message).toContain(
+    "desktop's DNS/network connection",
+  )
+})
+
 test("native protocol errors keep the cause and give a valid recovery operation", () => {
   expect(protocolError("DOM.resolveNode", new Error("Could not find node with given id")).message).toContain(
     "browser.snapshot({tabID})",

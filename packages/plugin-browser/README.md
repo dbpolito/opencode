@@ -77,11 +77,22 @@ reload, so a returned path remains usable; they follow the host's temporary-file
 lifetime.
 
 Each transfer is limited to 5 MiB total. There is no shared filesystem assumption,
-resumable file-transfer service or object store. Browsing uses the connected
-server's network: `localhost:8000` reaches that server's port 8000, while Chromium
-and page JavaScript still run on the desktop. Dev-server ports need not be public.
+resumable file-transfer service or object store. Chromium and page JavaScript
+always run on the desktop. Choose Browser network in the project's General settings:
 
-`tunnel.open/read/write/close` relay bounded TCP chunks through the existing
+- Server network (default) uses the connected server's DNS and network.
+  `localhost:8000` reaches the server, so dev-server ports need not be public.
+- Desktop network uses Chromium's direct connection and the desktop's DNS, including
+  local dnsmasq names. `localhost:8000` reaches the desktop. Remote dev servers must be
+  reachable from the desktop. Pages can also access its local and LAN services.
+
+The desktop saves the choice per server and project, shared across its worktrees.
+Reopen the project's session tabs to apply changes. Enable desktop access only for
+sessions you trust with that network. The toolbar and `browser.tabs.list` show the active
+network; the agent cannot change it. Commands still cross RPC, and bash execution,
+upload paths, and exported capture paths remain server-local.
+
+In server mode, `tunnel.open/read/write/close` relay bounded TCP chunks through the existing
 authenticated plugin RPC route. The desktop-only `/proxy` entrypoint adapts
 Chromium's HTTP/CONNECT proxy traffic, including WebSockets, to those methods.
 Network bytes never go onto the global event stream. Attachment closure releases

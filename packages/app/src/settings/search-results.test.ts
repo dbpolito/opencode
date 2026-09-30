@@ -56,6 +56,8 @@ describe("settings search index", () => {
     expect(targets({})).toContain("settings-tab-layout")
     expect(targets({ desktop: true })).toContain("settings-pinch-zoom")
     expect(targets({ browser: true })).not.toContain("settings-experimental-browser")
+    expect(targets({})).not.toContain("settings-project-browser-network")
+    expect(targets({ browser: true })).toContain("settings-project-browser-network")
     expect(targets({})).not.toContain("settings-show-project-icon")
     expect(targets({})).not.toContain("settings-mobile-titlebar-bottom")
     expect(targets({ mobile: true })).toContain("settings-mobile-titlebar-bottom")

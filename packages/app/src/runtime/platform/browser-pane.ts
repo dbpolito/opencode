@@ -5,6 +5,7 @@ export type BrowserPaneTarget = Readonly<{
   serverKey: string
   sessionID: string
   endpoint: BrowserPaneEndpoint
+  network?: Browser.NetworkMode
   restore?: Browser.State
 }>
 export type BrowserPaneLayout = {

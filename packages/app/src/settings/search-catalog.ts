@@ -218,6 +218,14 @@ export const serverSettings: Entry<SettingsServerTab>[] = [
 ]
 
 export const projectSettings: Entry<SettingsProjectTab>[] = [
+  {
+    tab: "general",
+    label: "project.settings.browserNetwork.title",
+    description: "project.settings.browserNetwork.description",
+    target: "settings-project-browser-network",
+    keywords: "browser proxy dns dnsmasq localhost remote server desktop network",
+    available: "browser",
+  },
   { tab: "general", label: "project.settings.name.title", target: "settings-project-name", keywords: "rename" },
   { tab: "general", label: "dialog.project.edit.icon", target: "settings-project-icon" },
   { tab: "general", label: "dialog.project.edit.color", target: "settings-project-color" },

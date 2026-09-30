@@ -30,6 +30,7 @@ type Entry = {
   partition: string
   lastState?: string
   network?: BrowserNetwork
+  networkMode: Browser.NetworkMode
   storageKey: string
   /**
    * Workspace directories whose files may load as file:// documents. Set only for the desktop's
@@ -84,6 +85,7 @@ export function createBrowserPane(storage: StateStore) {
         partition: `opencode-browser-${crypto.randomUUID()}`,
         storageKey,
         fileRoots: [],
+        networkMode: target.network ?? "server",
       }
       const sidecar = SidecarCredentials.get()
       const sameMachine =
@@ -140,6 +142,7 @@ export function createBrowserPane(storage: StateStore) {
               attachment,
               location: options.location,
               partition: entry.partition,
+              mode: entry.networkMode,
             })
             const connected = yield* Deferred.make<void>()
             const outbound = yield* Queue.unbounded<Effect.Effect<void>>()
@@ -208,7 +211,7 @@ export function createBrowserPane(storage: StateStore) {
                           message.requestID,
                           await execute(entry, command, abort.signal).then(
                             (result) => ({ type: "success" as const, result }),
-                            (error: unknown) => browserFailure(command.action, error),
+                            (error: unknown) => browserFailure(command.action, error, entry.networkMode),
                           ),
                         )
                       }),
@@ -392,6 +395,7 @@ export function createBrowserPane(storage: StateStore) {
     return {
       tabs: Array.from(entry.tabs, ([id, tab]) => entry.pages.get(id)?.state() ?? tab),
       focusedTabID: entry.focusedTabID,
+      network: entry.networkMode,
     }
   }
 

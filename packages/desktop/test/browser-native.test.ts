@@ -4,7 +4,7 @@ import path from "node:path"
 import { tmpdir } from "node:os"
 
 // Spawns a real Electron window; CI runners have no display for it.
-test.skipIf(!!process.env.CI).each(["native", "idle"])(
+test.skipIf(!!process.env.CI).each(["native", "desktop", "idle"])(
   "browser %s suite over authenticated HTTP RPC with separate server and desktop storage",
   async (suite) => {
     const root = await mkdtemp(path.join(tmpdir(), "opencode-browser-suite-"))
@@ -38,7 +38,12 @@ test.skipIf(!!process.env.CI).each(["native", "idle"])(
       [process.execPath, path.join(import.meta.dir, suite === "idle" ? "browser/idle-server.ts" : "browser/server.ts")],
       {
         cwd: root,
-        env: { ...environment, TMP: path.join(root, "server-files"), TEMP: path.join(root, "server-files") },
+        env: {
+          ...environment,
+          TMP: path.join(root, "server-files"),
+          TEMP: path.join(root, "server-files"),
+          TMPDIR: path.join(root, "server-files"),
+        },
         stdout: "inherit",
         stderr: "inherit",
         ipc(message: unknown) {
@@ -89,6 +94,7 @@ test.skipIf(!!process.env.CI).each(["native", "idle"])(
           SMOKE_URL: proxy.url.href,
           TMP: path.join(root, "client-files"),
           TEMP: path.join(root, "client-files"),
+          TMPDIR: path.join(root, "client-files"),
         },
         stdout: "inherit",
         stderr: "inherit",
@@ -101,7 +107,7 @@ test.skipIf(!!process.env.CI).each(["native", "idle"])(
           ),
         ]),
       ).toBe(0)
-      expect(tunnels).toBeGreaterThan(0)
+      expect(tunnels === 0).toBe(suite === "desktop")
       expect(rejectedStates).toBe(5)
     } finally {
       if (native?.exitCode === null) {

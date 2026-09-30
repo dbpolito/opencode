@@ -6,6 +6,7 @@ import { timelinePresets, type TimelineCategory, type TimelineDetail } from "@op
 import { persisted } from "@/runtime/persistence/storage"
 import { Persistence } from "@/runtime/persistence/schema"
 import { ScopedKey, type ServerScope } from "@/runtime/server/scope"
+import { Browser } from "@opencode/plugin-browser/rpc"
 
 export type Settings = typeof settingsSchema.Type
 export type WorkspaceDefaultDestination = Settings["workspaces"]["defaultDestination"]
@@ -136,6 +137,7 @@ export const settingsSchema = Persistence.struct({
   keybinds: Persistence.record(Schema.String.pipe(Schema.catchDecoding(() => Effect.succeed(Option.none())))),
   permissions: permissionsSchema,
   workspaces: workspacesSchema,
+  browser: Persistence.struct({ networks: Persistence.record(Browser.NetworkMode) }),
   notifications: notificationsSchema,
   sounds: soundsSchema,
 })
@@ -253,6 +255,7 @@ export const defaultSettings: Settings = {
   keybinds: {},
   permissions: { autoApprove: false },
   workspaces: { defaultDestination: "last-used", lastUsed: {} },
+  browser: { networks: {} },
   notifications: { agent: true, permissions: true, errors: false },
   sounds: {
     agentEnabled: true,
@@ -437,6 +440,16 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
             ...defaultSettings.workspaces,
             ...current,
             lastUsed: { ...current?.lastUsed, [ScopedKey.from(scope, projectID)]: value },
+          }))
+        },
+      },
+      browser: {
+        network(scope: ServerScope, projectID: string) {
+          return store.browser?.networks?.[ScopedKey.from(scope, projectID)] ?? "server"
+        },
+        setNetwork(scope: ServerScope, projectID: string, value: Browser.NetworkMode) {
+          setStore("browser", (current) => ({
+            networks: { ...current?.networks, [ScopedKey.from(scope, projectID)]: value },
           }))
         },
       },

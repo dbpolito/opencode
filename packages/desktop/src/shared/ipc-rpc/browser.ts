@@ -14,6 +14,7 @@ const target = Schema.Struct({
   serverKey: text(16_384),
   sessionID: text(256).check(Schema.isStartsWith("ses")),
   endpoint,
+  network: Schema.optionalKey(Browser.NetworkMode),
   restore: Schema.optionalKey(Browser.State),
 })
 const bounds = Schema.Struct({ x: Schema.Finite, y: Schema.Finite, width: Schema.Finite, height: Schema.Finite })

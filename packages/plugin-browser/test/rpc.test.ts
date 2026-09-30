@@ -4,6 +4,13 @@ import { Schema } from "effect"
 
 const tabID = Browser.TabID.make(`tab_${crypto.randomUUID()}`)
 
+test("browser inventories report the network without breaking older desktops", () => {
+  const decode = Schema.decodeUnknownSync(Browser.State)
+  expect(decode({ tabs: [], focusedTabID: null })).not.toHaveProperty("network")
+  expect(decode({ tabs: [], focusedTabID: null, network: "desktop" }).network).toBe("desktop")
+  expect(() => decode({ tabs: [], focusedTabID: null, network: "invalid" })).toThrow()
+})
+
 test("every page operation requires its own tab ID", () => {
   for (const operation of Browser.Operations) {
     if (operation.name === "tabs.list" || operation.name === "tabs.open") continue

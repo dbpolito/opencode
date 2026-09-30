@@ -100,6 +100,8 @@ export function settingsSearchIndex(input: {
         view: destination,
       })
       projectSettings.forEach((entry) => {
+        if (entry.available === "browser" && !input.browser) return
+        if (entry.target === "settings-project-browser-network" && !project.id) return
         if (entry.target === "settings-project-color" && project.icon?.override) return
         add(
           entry,

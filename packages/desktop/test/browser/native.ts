@@ -218,6 +218,7 @@ async function main() {
       endpoint: { url: process.env.SMOKE_URL!, password: process.env.SMOKE_PASSWORD },
     })
     const first = await call("tabs.open", { url: fixture })
+    assert.equal((await call("tabs.list", {})).network, "server")
     const second = await call("tabs.open", { url: `${fixture}/other`, focus: false })
     assert.equal((await call("tabs.list", {})).tabs.length, 2)
     const tabID = first.id

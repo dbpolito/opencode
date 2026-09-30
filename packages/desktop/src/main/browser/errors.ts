@@ -17,21 +17,26 @@ export function protocolError(method: string, error: unknown) {
   return new Error(`${recovery} Chromium command ${method} failed: ${detail}`, { cause: error })
 }
 
-export function browserFailure(action: Browser.Action, error: unknown): Extract<Browser.Outcome, { type: "failure" }> {
+export function browserFailure(
+  action: Browser.Action,
+  error: unknown,
+  mode: Browser.NetworkMode = "server",
+): Extract<Browser.Outcome, { type: "failure" }> {
   const detail = message(error, 1_700)
   const navigation = ["tabs.open", "navigate", "back", "forward", "reload"].includes(action.type)
   const network = navigation ? detail.match(/\bERR_[A-Z_]+\b/)?.[0] : undefined
+  const machine = mode === "desktop" ? "desktop" : "connected server"
   const hint =
     network === "ERR_CONNECTION_REFUSED"
-      ? "The browser could not connect to the site. Check its hostname/port on the connected server. localhost means that server, not the desktop."
+      ? `The browser could not connect to the site. Check its hostname/port on the ${machine}. localhost means ${mode === "desktop" ? "the desktop" : "that server"}.`
       : network === "ERR_NAME_NOT_RESOLVED"
-        ? "The connected server could not resolve the hostname. Check the URL spelling and the server's DNS/network connection."
+        ? `The ${machine} could not resolve the hostname. Check the URL spelling and the ${mode}'s DNS/network connection.`
         : network?.startsWith("ERR_CERT_") || network?.startsWith("ERR_SSL_")
           ? "The desktop rejected the site's TLS connection. Ask the user to fix the certificate or trust configuration; do not bypass certificate checks."
           : network === "ERR_ABORTED"
             ? "Navigation was interrupted or became a download. Inspect browser.tabs.list({}) and browser.files.list({tabID}) before deciding to navigate again."
             : network
-              ? "The site failed to load through the connected server. Check its URL/network and the OC2 connection before retrying; inspect the current tab first."
+              ? `The site failed to load using the ${machine}'s network. Check its URL and network connection before retrying; inspect the current tab first.`
               : action.type === "screenshot" && /UnknownVizError|capture.*(?:failed|unavailable)/i.test(detail)
                 ? "Chromium could not capture a rendered frame. Call browser.tabs.focus({tabID}) and keep the desktop window visible. If it is already visible, report the capture failure instead of repeating it unchanged."
                 : undefined

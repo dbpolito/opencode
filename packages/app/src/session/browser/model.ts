@@ -59,7 +59,9 @@ export function createSessionBrowser(session: SessionModel) {
   createEffect(() => {
     const sessionID = session.identity.sessionID()
     if (!sessionID) return
-    if (attachments.enabled()) attachments.attach(server, sessionID, session.layout.sessionKey())
+    const projectID = session.data.info()?.projectID ?? session.project()?.id
+    if (!projectID) return
+    if (attachments.enabled()) attachments.attach(server, sessionID, session.layout.sessionKey(), projectID)
   })
   createEffect(
     on(

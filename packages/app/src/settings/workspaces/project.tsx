@@ -2,6 +2,7 @@ import { Icon } from "@opencode/ui/icon"
 import { ProjectAvatar, PROJECT_AVATAR_VARIANTS } from "@opencode/ui/project-avatar"
 import { Textarea } from "@opencode/ui/textarea"
 import { TextInput } from "@opencode/ui/text-input"
+import { Select } from "@opencode/ui/select"
 import { For, Show, type Component } from "solid-js"
 import { useLanguage } from "@/runtime/i18n/language"
 import { getProjectAvatarVariant, type LocalProject } from "@/shell/state/layout"
@@ -13,6 +14,9 @@ import { ProjectOptions } from "./project-options"
 import { SettingsList } from "@/settings/list"
 import { SettingsRow } from "@/settings/row"
 import { createEditProjectModel } from "./project-model"
+import { useSettings } from "@/settings/model"
+import { usePlatform } from "@/runtime/platform/platform"
+import { useGlobal } from "@/runtime/server/runtime"
 import "./project.css"
 
 export const SettingsProjectGeneral: Component<{
@@ -24,6 +28,10 @@ export const SettingsProjectGeneral: Component<{
   const language = useLanguage()
   const model = createEditProjectModel(props)
   const servers = useSettingsServers()
+  const settings = useSettings()
+  const platform = usePlatform()
+  const global = useGlobal()
+  const scope = () => global.ensureServerCtx(props.server).sdk.scope
 
   return (
     <>
@@ -149,6 +157,26 @@ export const SettingsProjectGeneral: Component<{
                 </For>
               </div>
             </SettingsRow>
+          </Show>
+
+          <Show when={platform.browserPane && props.project.id} keyed>
+            {(projectID) => (
+              <SettingsRow
+                title={language.t("project.settings.browserNetwork.title")}
+                description={language.t("project.settings.browserNetwork.description")}
+              >
+                <Select
+                  data-action="settings-project-browser-network"
+                  options={["server", "desktop"] as const}
+                  current={settings.browser.network(scope(), projectID)}
+                  aria-label={language.t("project.settings.browserNetwork.title")}
+                  placement="bottom-end"
+                  gutter={6}
+                  label={(option) => language.t(`project.settings.browserNetwork.${option}`)}
+                  onSelect={(option) => option && settings.browser.setNetwork(scope(), projectID, option)}
+                />
+              </SettingsRow>
+            )}
           </Show>
 
           <div class="project-settings-startup">

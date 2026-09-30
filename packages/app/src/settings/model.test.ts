@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test"
 import { Schema } from "effect"
 import { timelinePresets } from "@opencode/session-ui/timeline/detail"
 import { Persistence } from "@/runtime/persistence/schema"
+import { ScopedKey, ServerScope } from "@/runtime/server/scope"
+import { ServerConnection } from "@/runtime/server/registry"
 import {
   settingsSchema,
   settingsPersistence,
@@ -34,6 +36,16 @@ describe("settings timeline detail migration", () => {
 })
 
 describe("settings schema", () => {
+  test("browser network is stored separately by server scope and project", () => {
+    const first = ScopedKey.from(ServerScope.local, "project-a")
+    const second = ScopedKey.from(ServerScope.local, "project-b")
+    const remote = ScopedKey.from(ServerScope.fromServerKey(ServerConnection.Key.make("remote")), "project-a")
+    const settings = decode({ browser: { networks: { [first]: "desktop", [second]: "server", [remote]: "server" } } })
+    expect(settings.browser.networks).toEqual({ [first]: "desktop", [second]: "server", [remote]: "server" })
+    expect(decode(encode(settings)).browser.networks).toEqual(settings.browser.networks)
+    expect(decode({}).browser.networks).toEqual({})
+  })
+
   test("restores summary expansion and discards the retired status preference", () => {
     const settings = decode({
       general: { showStatus: true, showSearch: true },
@@ -88,6 +100,7 @@ describe("settings schema", () => {
       keybinds: {},
       permissions: { autoApprove: false },
       workspaces: { defaultDestination: "last-used", lastUsed: {} },
+      browser: { networks: {} },
       notifications: { agent: true, permissions: true, errors: false },
       sounds: {
         agentEnabled: true,

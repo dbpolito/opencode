@@ -1020,6 +1020,8 @@ export const dict = {
 
   "session.browser.address": "Browser address",
   "session.browser.replaced": "Browser control moved to another desktop window.",
+  "session.browser.network.server": "Website DNS and connections use the connected server. localhost means that server.",
+  "session.browser.network.desktop": "Website DNS and connections use this computer. localhost means this computer.",
   "session.browser.unsupported": "This desktop app does not support the browser pane.",
   "session.browser.suspended": "Browser suspended. Interact with this session to reconnect.",
   "session.browser.address.placeholder": "Enter URL",
@@ -1216,6 +1218,11 @@ export const dict = {
   "project.settings.title": "Edit project",
   "project.settings.general.description": "Manage project name and appearance",
   "project.settings.name.title": "Project name",
+  "project.settings.browserNetwork.title": "Browser network",
+  "project.settings.browserNetwork.description":
+    "Choose the browser network for this project. Server uses the connected server's DNS and network. Desktop uses this computer's DNS and network, including local sites; localhost means this computer. Reopen this project's session tabs to apply changes. Bash and file tools still run on the server.",
+  "project.settings.browserNetwork.server": "Server network",
+  "project.settings.browserNetwork.desktop": "Desktop network",
   "project.settings.name.description": "The name shown for this project throughout OpenCode",
   "project.settings.icon.description": "Recommended: 128×128px. Click or drag to upload an image.",
   "project.settings.color.description": "Used for the project icon when no custom image is set",

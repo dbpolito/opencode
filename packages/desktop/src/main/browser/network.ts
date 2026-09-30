@@ -12,7 +12,19 @@ export const createBrowserNetwork = Effect.fn("BrowserNetwork.create")(function*
   attachment: { sessionID: Session.ID; connectionID: string }
   location: { directory: string; workspace?: string }
   partition: string
+  mode: Browser.NetworkMode
 }) {
+  const partition = session.fromPartition(input.partition)
+  if (input.mode === "desktop") {
+    yield* Effect.addFinalizer(() => Effect.promise(() => partition.closeAllConnections()))
+    yield* Effect.tryPromise(() => partition.setProxy({ mode: "direct" }))
+    return {
+      attach(contents: WebContents) {
+        contents.setWebRTCIPHandlingPolicy("disable_non_proxied_udp")
+        return () => {}
+      },
+    }
+  }
   const options = { location: input.location }
   const proxy = yield* Effect.acquireRelease(
     Effect.tryPromise(() =>
@@ -37,7 +49,6 @@ export const createBrowserNetwork = Effect.fn("BrowserNetwork.create")(function*
     ),
     (proxy) => Effect.promise(() => proxy.close()),
   )
-  const partition = session.fromPartition(input.partition)
   yield* Effect.addFinalizer(() => Effect.promise(() => partition.closeAllConnections()))
   // This is the browser's private partition, not the app/API connection. Never
   // bypass localhost: it must resolve on the machine running the OC2 server.

@@ -149,6 +149,7 @@ export const make = Effect.fn("BrowserConnection.make")(function* (
       // Keep the selected attachment and document, even while permissions or file IO wait.
       return {
         tab,
+        network: browser.state.network ?? "server",
         inspect: () =>
           request(rpc, browser, action, tab, [], { inspect: true }).pipe(
             Effect.flatMap((result) => Schema.decodeUnknownEffect(Browser.Target)(result.value)),

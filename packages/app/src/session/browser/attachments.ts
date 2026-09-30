@@ -1,7 +1,8 @@
-import { batch, createEffect, createMemo, createRoot, getOwner, on, onCleanup, runWithOwner } from "solid-js"
+import { batch, createEffect, createMemo, createRoot, getOwner, on, onCleanup, runWithOwner, untrack } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
 import { createSimpleContext } from "@opencode/ui/context"
 import { useLanguage } from "@/runtime/i18n/language"
+import { useSettings } from "@/settings/model"
 import type { Browser } from "@opencode/plugin-browser/rpc"
 import type { BrowserPaneCommand, BrowserPaneEvent } from "@/runtime/platform/browser-pane"
 import { usePlatform } from "@/runtime/platform/platform"
@@ -34,6 +35,7 @@ export const { use: useBrowserAttachments, provider: BrowserAttachmentsProvider 
   gate: false,
   init: () => {
     const platform = usePlatform()
+    const settings = useSettings()
     const language = useLanguage()
     const shellTabs = useTabs()
     const layout = useLayout()
@@ -88,14 +90,16 @@ export const { use: useBrowserAttachments, provider: BrowserAttachmentsProvider 
       enabled,
       supported: (server: Server) => !unsupported[server.key],
       state: (server: Server, sessionID: string) => store[key(server, sessionID)],
-      attach(server: Server, sessionID: string, sessionKey: SessionStateKey) {
+      attach(server: Server, sessionID: string, sessionKey: SessionStateKey, projectID: string) {
         const id = key(server, sessionID)
         if (live.has(id)) return
         const pane = platform.browserPane
-        if (!pane || !enabled() || unsupported[server.key] || server.health?.incompatible) return
+        if (!pane || !enabled() || !settings.ready() || unsupported[server.key] || server.health?.incompatible) return
         // Focus requests write to the owning session's layout even while another shell tab is routed,
         // so the Review pane and browser tab are already selected when the user returns to it.
         const tabs = createRoot((dispose) => ({ dispose, layout: layout.tabs(sessionKey) }), owner)
+        // Apply network changes only when the session tab reopens.
+        const network = untrack(() => settings.browser.network(server.ctx.sdk.scope, projectID))
         const connection = createBrowserConnection({
           pane,
           // Resolve the current port at every wake, including after sidecar replacement.
@@ -103,6 +107,7 @@ export const { use: useBrowserAttachments, provider: BrowserAttachmentsProvider 
             serverKey: server.key,
             sessionID,
             endpoint: { ...server.conn.http, url: server.ctx.sdk.url },
+            network,
           }),
           focus: (tabID) => {
             const tab = sessionBrowserTab(tabID)

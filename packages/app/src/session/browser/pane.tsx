@@ -484,6 +484,22 @@ export function SessionBrowserPane(props: {
             />
           </Tooltip>
         </Show>
+        <Tooltip
+          placement="top"
+          value={language.t(
+            props.browser.state()?.network === "desktop"
+              ? "session.browser.network.desktop"
+              : "session.browser.network.server",
+          )}
+        >
+          <span class="shrink-0 text-12-regular text-v2-text-text-subtle">
+            {language.t(
+              props.browser.state()?.network === "desktop"
+                ? "project.settings.browserNetwork.desktop"
+                : "project.settings.browserNetwork.server",
+            )}
+          </span>
+        </Tooltip>
         <form
           dir="ltr"
           class="relative min-w-0 flex-1 h-7 rounded-md hover:bg-v2-overlay-simple-overlay-hover focus-within:bg-v2-overlay-simple-overlay-hover text-12-regular"
