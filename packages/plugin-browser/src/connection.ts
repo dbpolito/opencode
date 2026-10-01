@@ -100,7 +100,7 @@ export const make = Effect.fn("BrowserConnection.make")(function* (
           )
           yield* grant(input.sessionID)
           yield* rpc.events
-            .emit("control", { type: "attached", connectionID: input.connectionID, version: 4 })
+            .emit("control", { type: "attached", connectionID: input.connectionID, version: input.version })
             .pipe(Effect.orDie)
           return yield* Deferred.await(browser.closed)
         }).pipe(Effect.scoped),
@@ -134,24 +134,14 @@ export const make = Effect.fn("BrowserConnection.make")(function* (
             ).pipe(Effect.asVoid)
           yield* Deferred.succeed(pending.result, input.outcome.result)
         }).pipe(Effect.asVoid),
-      "tunnel.open": (input, call) =>
-        tunnels(input).pipe(
-          Effect.flatMap((network) => network.open(input.target)),
-          Effect.mapError((error) => call.error("unavailable", error.message, {})),
-        ),
-      "tunnel.read": (input, call) =>
-        tunnels(input).pipe(
-          Effect.flatMap((network) => network.read(input.tunnelID)),
-          Effect.mapError((error) => call.error("unavailable", error.message, {})),
-        ),
-      "tunnel.write": (input, call) =>
-        tunnels(input).pipe(
-          Effect.flatMap((network) => network.write(input.tunnelID, input.data, input.end)),
-          Effect.mapError((error) => call.error("unavailable", error.message, {})),
-        ),
-      "tunnel.close": (input, call) =>
-        tunnels(input).pipe(
-          Effect.flatMap((network) => network.close(input.tunnelID)),
+      "tunnel.connect": (input, call) =>
+        Effect.gen(function* () {
+          const network = yield* tunnels(input)
+          const id = yield* Effect.acquireRelease(network.open(input.target), (id) => network.close(id))
+          const socket = yield* call.socket
+          yield* network.connect(id, socket)
+        }).pipe(
+          Effect.scoped,
           Effect.mapError((error) => call.error("unavailable", error.message, {})),
         ),
     })

@@ -57,6 +57,28 @@ test("network lifecycle and RPC version are explicit", () => {
     Schema.decodeUnknownSync(Browser.Control)({ type: "attached", connectionID: "old-client", version: 2 }),
   ).toThrow()
   expect(Schema.decodeUnknownSync(Browser.Definition.methods.attach.output)("replaced")).toBe("replaced")
+  expect(Schema.decodeUnknownSync(Browser.Control)({ type: "attached", connectionID: "client", version: 5 })).toEqual({
+    type: "attached",
+    connectionID: "client",
+    version: 5,
+  })
+  expect(() =>
+    Schema.decodeUnknownSync(Browser.Control)({ type: "attached", connectionID: "client", version: 4 }),
+  ).toThrow()
+  expect(() =>
+    Schema.decodeUnknownSync(Browser.Definition.methods.attach.input)({
+      sessionID: "ses_old",
+      connectionID: "client",
+      version: 4,
+    }),
+  ).toThrow()
+  expect(
+    Schema.decodeUnknownSync(Browser.Definition.methods.attach.input)({
+      sessionID: "ses_current",
+      connectionID: "client",
+      version: 5,
+    }).version,
+  ).toBe(5)
 })
 
 // Tool search matches query words as substrings of the description, folding a trailing "s"/"es".
@@ -111,16 +133,11 @@ test.each([
   }
 })
 
-test("network RPC is bounded bytes and does not add model tools", () => {
+test("network RPC exposes only streaming and does not add model tools", () => {
   expect(Browser.Operations.some((operation) => operation.name.startsWith("tunnel."))).toBe(false)
-  expect(Schema.decodeUnknownSync(Browser.TunnelRead)({ data: "AAEC", eof: false }).data).toEqual(
-    new Uint8Array([0, 1, 2]),
-  )
-  expect(() =>
-    Schema.decodeUnknownSync(Browser.TunnelRead)({
-      data: Buffer.alloc(Browser.TUNNEL_CHUNK_BYTES + 1).toString("base64"),
-      eof: false,
-    }),
-  ).toThrow()
+  expect(Browser.Definition.methods["tunnel.connect"].duplex).toBe(true)
+  expect(Object.keys(Browser.Definition.methods).filter((name) => name.startsWith("tunnel."))).toEqual([
+    "tunnel.connect",
+  ])
   expect(() => Schema.decodeUnknownSync(Browser.TunnelTarget)({ host: "localhost", port: 0 })).toThrow()
 })

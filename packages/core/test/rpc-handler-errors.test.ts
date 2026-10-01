@@ -60,3 +60,37 @@ for (const method of ["dies", "throws", "raw", "undeclared", "invalidError"] as 
     }),
   )
 }
+
+it.effect("duplex RPC validates transport and input before acquiring a socket", () =>
+  Effect.gen(function* () {
+    const rpc = yield* Rpc.Service
+    const definition = Rpc.define({
+      id: "duplex",
+      methods: {
+        connect: { input: Schema.String, output: Schema.Void, duplex: true, errors: { denied: Schema.Void } },
+        ordinary: { input: Schema.Void, output: Schema.Void },
+      },
+      events: {},
+    })
+    yield* rpc.register(definition, {
+      connect: (_input, context) => Effect.fail(context.error("denied", "Attachment unavailable")),
+      ordinary: () => Effect.void,
+    })
+    const socket = Effect.die(new Error("Must not upgrade this request"))
+    expect(yield* rpc.call("duplex", "connect", "hello").pipe(Effect.flip)).toMatchObject({ type: "rpc.invalid_input" })
+    expect(yield* rpc.connect("duplex", "ordinary", undefined, socket).pipe(Effect.flip)).toMatchObject({
+      type: "rpc.invalid_input",
+    })
+    expect(yield* rpc.connect("duplex", "missing", "hello", socket).pipe(Effect.flip)).toMatchObject({
+      type: "rpc.method_not_found",
+    })
+    expect(yield* rpc.connect("duplex", "connect", 42, socket).pipe(Effect.flip)).toMatchObject({
+      type: "rpc.invalid_input",
+    })
+    expect(yield* rpc.connect("duplex", "connect", "hello", socket).pipe(Effect.flip)).toEqual({
+      type: "denied",
+      message: "Attachment unavailable",
+    })
+    expect(Object.hasOwn(rpc.client(definition), "connect")).toBe(false)
+  }),
+)

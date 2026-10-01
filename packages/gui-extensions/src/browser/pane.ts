@@ -3,7 +3,7 @@ import { Browser } from "@opencode/plugin-browser/rpc"
 import { OpenCode } from "@opencode/client/effect"
 import { SessionID } from "@opencode/schema/session-id"
 import electron, { type BrowserWindow } from "electron"
-import { Deferred, Effect, ManagedRuntime, Queue, Schedule, Schema, Stream } from "effect"
+import { Deferred, Effect, Layer, ManagedRuntime, Queue, Schedule, Schema, Stream } from "effect"
 import { HttpClient, HttpClientRequest } from "effect/unstable/http"
 import type { MainApp, MainStorage, Surfaces, Windows } from "../sdk/main"
 import { createBrowserPage, type BrowserPage, type Shared } from "./chromium"
@@ -55,7 +55,9 @@ export function createBrowserPane(input: {
   // for them so a replacement never starts beside old pages still recording.
   const releasing = new Set<Promise<void>>()
   // Keep long-lived RPC requests off Chromium's shared HTTP connection pool.
-  const runtime = ManagedRuntime.make(NodeHttpClient.layerNodeHttp)
+  const runtime = ManagedRuntime.make(
+    NodeHttpClient.layerNodeHttpNoAgent.pipe(Layer.provide(NodeHttpClient.layerAgentOptions({ keepAlive: true }))),
+  )
   let disposed = false
   return {
     async register(window: number, binding: string, target: Target) {
@@ -146,7 +148,8 @@ export function createBrowserPane(input: {
             const attachment = { sessionID, connectionID: crypto.randomUUID() }
             const rpc = client.rpc(Browser.Definition)
             entry.network = yield* createBrowserNetwork({
-              rpc,
+              baseUrl: server.url,
+              headers: server.headers,
               attachment,
               location: options.location,
               partition: entry.partition,
@@ -251,7 +254,7 @@ export function createBrowserPane(input: {
               receive,
               Stream.fromQueue(outbound).pipe(Stream.runForEach((send) => send)),
               Deferred.await(connected).pipe(
-                Effect.andThen(rpc.attach({ ...attachment, version: 4 }, options)),
+                Effect.andThen(rpc.attach({ ...attachment, version: 5 }, options)),
                 Effect.tap((result) =>
                   Effect.sync(() => {
                     if (result === "replaced") reason = "browser.pane.replaced"

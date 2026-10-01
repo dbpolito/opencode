@@ -14,6 +14,8 @@ export interface Method {
   readonly input: Tool.ValueSchema
   readonly output: Tool.ValueSchema
   readonly errors?: ErrorMap
+  /** Runs over an authenticated WebSocket instead of a JSON request/response call. */
+  readonly duplex?: true
 }
 
 export type PortableValueSchema = StandardSchemaV1<unknown, unknown> | JsonSchema.JsonSchema
@@ -24,6 +26,8 @@ export interface PortableMethod extends Method {
   readonly errors?: Readonly<Record<string, PortableValueSchema>> & {
     readonly [Name in `rpc.${string}`]?: never
   }
+  /** Duplex handlers currently use the Effect Socket API. */
+  readonly duplex?: never
 }
 
 type EventDataObject = Readonly<Record<string, unknown>>
