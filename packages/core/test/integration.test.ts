@@ -273,10 +273,10 @@ describe("Integration", () => {
         editor.method.update({
           integrationID,
           method: { id: methodID, type: "oauth", label: "ChatGPT" },
-          authorize: () =>
+          authorize: (_answer, redirectURI) =>
             Effect.succeed({
               mode: "code" as const,
-              url: "https://example.com/authorize",
+              url: `https://example.com/authorize?redirect_uri=${encodeURIComponent(redirectURI ?? "")}`,
               instructions: "Paste the code",
               callback: (code: string) =>
                 Effect.succeed(
@@ -297,8 +297,10 @@ describe("Integration", () => {
         integrationID,
         methodID,
         label: "Personal",
+        redirectURI: "http://127.0.0.1:12345/callback",
       })
       expect(attempt.mode).toBe("code")
+      expect(new URL(attempt.url).searchParams.get("redirect_uri")).toBe("http://127.0.0.1:12345/callback")
       yield* integrations.oauth.complete({ integrationID, attemptID: attempt.attemptID, code: "1234" })
 
       expect((yield* credentials.list(integrationID))[0]).toEqual(

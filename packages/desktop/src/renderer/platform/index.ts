@@ -22,6 +22,14 @@ export function createDesktopPlatform(api: ElectronAPI, windowState: DesktopWind
     os,
     version: windowState.version,
     windowID: windowState.id,
+    oauthListen: async (redirectURI) => {
+      const receiver = await api.oauthListen(redirectURI)
+      return {
+        redirectURI: receiver.redirectURI,
+        callback: () => api.oauthCallback(receiver.token),
+        close: (result) => api.oauthClose(receiver.token, result),
+      }
+    },
     ...createDesktopFiles(api, os),
     ...createDesktopStorage(api),
     exportDebugLogs: () => api.exportDebugLogs(),

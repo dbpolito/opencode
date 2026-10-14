@@ -6231,7 +6231,7 @@
             }
           }
         },
-        "description": "Start an OAuth attempt and return the authorization details.",
+        "description": "Start an OAuth attempt and return the authorization details. MCP clients may supply a client-local loopback redirectURI and relay the resulting callback URL to the completion endpoint.",
         "summary": "Begin OAuth connection",
         "requestBody": {
           "content": {
@@ -6253,6 +6253,16 @@
                     ]
                   },
                   "label": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "redirectURI": {
                     "anyOf": [
                       {
                         "type": "string"
@@ -6579,7 +6589,7 @@
             }
           }
         },
-        "description": "Complete a code-based OAuth attempt and store the resulting credential.",
+        "description": "Complete a code-based OAuth attempt and store the resulting credential. For MCP attempts started with redirectURI, code must contain the full callback URL, including state and issuer.",
         "summary": "Complete OAuth connection",
         "requestBody": {
           "content": {
@@ -16129,6 +16139,9 @@
           },
           "form": {
             "$ref": "#/components/schemas/Form.Fields_1"
+          },
+          "redirectURI": {
+            "type": "string"
           }
         },
         "required": ["id", "type", "label"],

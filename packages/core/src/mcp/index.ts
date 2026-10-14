@@ -201,11 +201,21 @@ export const layer = (options?: Options) =>
             })
             editor.method.update({
               integrationID,
-              method: { id: methodID, type: "oauth", label: name },
-              authorize: () =>
+              method: {
+                id: methodID,
+                type: "oauth",
+                label: name,
+                redirectURI: remote.oauth
+                  ? (remote.oauth.redirect_uri ??
+                    (remote.oauth.callback_port
+                      ? `http://127.0.0.1:${remote.oauth.callback_port}/callback`
+                      : undefined))
+                  : undefined,
+              },
+              authorize: (_answer, redirectURI) =>
                 Effect.gen(function* () {
                   const { McpOAuth } = yield* Effect.promise(() => import("./oauth.js"))
-                  return yield* McpOAuth.authorize({ name, config: remote, integrationID, methodID }).pipe(
+                  return yield* McpOAuth.authorize({ name, config: remote, integrationID, methodID, redirectURI }).pipe(
                     Effect.provideService(Credential.Service, credentials),
                   )
                 }),

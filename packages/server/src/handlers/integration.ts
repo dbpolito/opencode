@@ -115,6 +115,7 @@ export const IntegrationHandler = HttpApiBuilder.group(Api, "server.integration"
                 methodID: ctx.payload.methodID,
                 answer: ctx.payload.answer,
                 label: ctx.payload.label,
+                redirectURI: ctx.payload.redirectURI,
               }),
             ),
           )

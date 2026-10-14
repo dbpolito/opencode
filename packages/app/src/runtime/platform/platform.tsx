@@ -40,6 +40,12 @@ type PlatformBase = {
 
   /** Open an authentication page, reporting whether the browser could be launched. */
   openBrowser?(url: string): Promise<boolean>
+  /** Receive an OAuth redirect on the desktop, then relay it through the server client. */
+  oauthListen?(redirectURI?: string): Promise<{
+    redirectURI: string
+    callback(): Promise<string>
+    close(result?: { success: boolean; message: string }): Promise<void>
+  }>
 
   /** Open a local path in a local app (desktop only) */
   openPath?(path: string, app?: string): Promise<void>

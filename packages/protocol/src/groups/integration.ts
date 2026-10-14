@@ -108,6 +108,7 @@ export const IntegrationGroup = HttpApiGroup.make("server.integration")
         methodID: Integration.MethodID,
         answer: Schema.optional(Form.Answer),
         label: Schema.optional(Schema.String),
+        redirectURI: Schema.optional(Schema.String),
       }),
       success: Location.response(Integration.Attempt),
       error: InvalidRequestError,
@@ -117,7 +118,8 @@ export const IntegrationGroup = HttpApiGroup.make("server.integration")
         OpenApi.annotations({
           identifier: "integration.oauth.connect",
           summary: "Begin OAuth connection",
-          description: "Start an OAuth attempt and return the authorization details.",
+          description:
+            "Start an OAuth attempt and return the authorization details. MCP clients may supply a client-local loopback redirectURI and relay the resulting callback URL to the completion endpoint.",
         }),
       ),
   )
@@ -154,7 +156,8 @@ export const IntegrationGroup = HttpApiGroup.make("server.integration")
         OpenApi.annotations({
           identifier: "integration.oauth.complete",
           summary: "Complete OAuth connection",
-          description: "Complete a code-based OAuth attempt and store the resulting credential.",
+          description:
+            "Complete a code-based OAuth attempt and store the resulting credential. For MCP attempts started with redirectURI, code must contain the full callback URL, including state and issuer.",
         }),
       ),
   )

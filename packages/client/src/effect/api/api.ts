@@ -1473,6 +1473,7 @@ export type IntegrationOauthConnectInput = {
   readonly methodID: Integration.MethodID
   readonly answer?: Form.Answer | undefined
   readonly label?: string | undefined
+  readonly redirectURI?: string | undefined
 }
 export type IntegrationOauthConnectOutput = {
   readonly location: Location.PublicRef

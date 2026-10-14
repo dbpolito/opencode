@@ -12,6 +12,7 @@ import { eventHandlers } from "./ipc-handlers/events"
 import { extensionHandlers } from "./ipc-handlers/extensions"
 import { fileHandlers } from "./ipc-handlers/files"
 import { menuHandlers } from "./ipc-handlers/menu"
+import { oauthHandlers } from "./ipc-handlers/oauth"
 import { storageHandlers } from "./ipc-handlers/storage"
 import { windowHandlers } from "./ipc-handlers/window"
 import { IpcPortHandoff, IpcServerProtocolLive } from "./ipc-transport"
@@ -29,6 +30,7 @@ const handlers = Layer.mergeAll(
   fileHandlers,
   windowHandlers,
   menuHandlers,
+  oauthHandlers,
   eventHandlers,
   extensionHandlers,
 )

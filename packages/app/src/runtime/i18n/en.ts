@@ -334,6 +334,8 @@ export const dict = {
   "mcp.status.needs_auth": "needs auth",
   "mcp.status.disabled": "disabled",
   "mcp.auth.interactiveForm": "MCP server {{name}} requires an interactive authentication form",
+  "mcp.auth.success": "Signed in. You can close this browser tab.",
+  "mcp.auth.failed": "Sign-in failed. Return to OpenCode and try again.",
 
   "dialog.fork.empty": "No messages to fork from",
 

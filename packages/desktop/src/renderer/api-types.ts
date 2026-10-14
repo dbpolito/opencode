@@ -44,6 +44,9 @@ export type ElectronAPI = {
   saveFile(opts: SaveFilePickerOptions, content: string): Promise<boolean>
   openExternal(url: string): void
   openBrowser(url: string): Promise<boolean>
+  oauthListen(redirectURI?: string): Promise<{ token: string; redirectURI: string }>
+  oauthCallback(token: string): Promise<string>
+  oauthClose(token: string, result?: { success: boolean; message: string }): Promise<void>
   openLocalFile(url: string): void
   openPath(path: string, app?: string): Promise<string | undefined>
   revealPath(path: string): Promise<boolean>

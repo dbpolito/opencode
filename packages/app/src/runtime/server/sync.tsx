@@ -329,9 +329,10 @@ export function createServerSyncContextInner(serverSDK: ServerSDK, data: Data) {
             )
 
             if (!server?.integrationID) throw new Error(`MCP server ${name} has no authentication integration`)
+            const integrationID = server.integrationID
 
             const integration = await serverSDK.api.integration.get({
-              integrationID: server.integrationID,
+              integrationID,
               location: { directory: key },
             })
 
@@ -340,13 +341,43 @@ export function createServerSyncContextInner(serverSDK: ServerSDK, data: Data) {
             if (!method || method.type !== "oauth")
               throw new Error(`MCP server ${name} requires an interactive authentication form`)
 
-            const attempt = await serverSDK.api.integration.oauth.connect({
-              integrationID: server.integrationID,
-              methodID: method.id,
-              location: { directory: key },
-            })
+            const receiver = await platform.oauthListen?.(method.redirectURI)
+            const attempt = await serverSDK.api.integration.oauth
+              .connect({
+                integrationID,
+                methodID: method.id,
+                location: { directory: key },
+                redirectURI: receiver?.redirectURI,
+              })
+              .catch(async (error: unknown) => {
+                await receiver?.close()
+                throw error
+              })
 
             platform.openExternal(attempt.data.url)
+            if (!receiver) return
+
+            await receiver
+              .callback()
+              .then(async (code) => {
+                await serverSDK.api.integration.oauth.complete({
+                  integrationID,
+                  attemptID: attempt.data.attemptID,
+                  location: { directory: key },
+                  code,
+                })
+                await serverSDK.api.mcp.connect({ server: name, location: { directory: key } })
+                await receiver.close({ success: true, message: language.t("mcp.auth.success") })
+              })
+              .catch(async (error: unknown) => {
+                await receiver.close({ success: false, message: language.t("mcp.auth.failed") })
+                await serverSDK.api.integration.oauth.cancel({
+                  integrationID,
+                  attemptID: attempt.data.attemptID,
+                  location: { directory: key },
+                })
+                throw error
+              })
           },
           refresh: async () => {
             data.location.mcp.server.invalidate({ directory: key })

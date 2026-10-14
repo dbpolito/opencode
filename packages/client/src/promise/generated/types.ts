@@ -2426,7 +2426,13 @@ export type FormDetail = {
   state: FormState
 }
 
-export type IntegrationOAuthMethod = { id: IntegrationMethodID; type: "oauth"; label: string; form?: FormFields }
+export type IntegrationOAuthMethod = {
+  id: IntegrationMethodID
+  type: "oauth"
+  label: string
+  form?: FormFields
+  redirectURI?: string
+}
 
 export type IntegrationKeyMethod = { type: "key"; label?: string; form?: FormFields }
 
@@ -5854,17 +5860,26 @@ export type IntegrationOauthConnectInput = {
     readonly methodID: string
     readonly answer?: { readonly [x: string]: string | number | boolean | ReadonlyArray<string> } | undefined
     readonly label?: string | undefined
+    readonly redirectURI?: string | undefined
   }["methodID"]
   readonly answer?: {
     readonly methodID: string
     readonly answer?: { readonly [x: string]: string | number | boolean | ReadonlyArray<string> } | undefined
     readonly label?: string | undefined
+    readonly redirectURI?: string | undefined
   }["answer"]
   readonly label?: {
     readonly methodID: string
     readonly answer?: { readonly [x: string]: string | number | boolean | ReadonlyArray<string> } | undefined
     readonly label?: string | undefined
+    readonly redirectURI?: string | undefined
   }["label"]
+  readonly redirectURI?: {
+    readonly methodID: string
+    readonly answer?: { readonly [x: string]: string | number | boolean | ReadonlyArray<string> } | undefined
+    readonly label?: string | undefined
+    readonly redirectURI?: string | undefined
+  }["redirectURI"]
 }
 
 export type IntegrationOauthConnectOutput = { location: LocationPublicRef; data: IntegrationAttempt }

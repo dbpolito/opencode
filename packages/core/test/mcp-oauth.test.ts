@@ -104,6 +104,7 @@ const start = (
       integrationID,
       methodID,
     })
+    if (authorization.mode !== "auto") throw new Error("Expected a server-local callback")
     return { authorization, url: new URL(authorization.url) }
   }).pipe(Effect.provideService(Credential.Service, store.service))
 
@@ -117,6 +118,51 @@ const authorize = (redirect_uri?: string) =>
   )
 
 describe("MCP OAuth", () => {
+  test.each([
+    { name: "accepted", state: true, origin: true, issuer: true, error: false, success: true },
+    { name: "wrong state", state: false, origin: true, issuer: true, error: false, success: false },
+    { name: "wrong callback", state: true, origin: false, issuer: true, error: false, success: false },
+    { name: "wrong issuer", state: true, origin: true, issuer: false, error: false, success: false },
+    { name: "provider denial", state: true, origin: true, issuer: true, error: true, success: false },
+  ])("relays a desktop callback: $name", async (item) => {
+    const target = authorizationServer({})
+    // Occupying the callback port proves the remote flow does not bind its own listener.
+    const desktop = Bun.serve({ port: 0, fetch: () => new Response(null) })
+    const redirectURI = `http://127.0.0.1:${desktop.port}/callback`
+    const exit = await Effect.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const authorization = yield* McpOAuth.authorize({
+            name: "test",
+            config: remote(target.server.url.href),
+            integrationID,
+            methodID,
+            redirectURI,
+          })
+          if (authorization.mode !== "code") throw new Error("Expected a relayed callback")
+          const url = new URL(authorization.url)
+          expect(url.searchParams.get("redirect_uri")).toBe(redirectURI)
+          const callback = new URL(item.origin ? redirectURI : "http://127.0.0.1:1/callback")
+          callback.searchParams.set("state", item.state ? (url.searchParams.get("state") ?? "") : "incorrect")
+          callback.searchParams.set("code", "accepted")
+          callback.searchParams.set("iss", item.issuer ? target.server.url.origin : "https://wrong-issuer.test")
+          if (item.error) callback.searchParams.set("error", "access_denied")
+          return yield* Effect.exit(authorization.callback(callback.href))
+        }),
+      ).pipe(Effect.provideService(Credential.Service, memoryCredentials([]).service)),
+    ).finally(() => {
+      target.server.stop(true)
+      desktop.stop(true)
+    })
+    expect(Exit.isSuccess(exit)).toBe(item.success)
+    expect(target.tokenRequests).toHaveLength(item.success ? 1 : 0)
+    if (Exit.isSuccess(exit)) {
+      expect(exit.value.access).toBe("access")
+      expect(target.tokenRequests[0]?.get("redirect_uri")).toBe(redirectURI)
+      expect(target.tokenRequests[0]?.get("code_verifier")).toBeTruthy()
+    }
+  })
+
   test("completes interactive authorization through the loopback callback", async () => {
     const tokenRequests: URLSearchParams[] = []
     const server = Bun.serve({
@@ -166,10 +212,7 @@ describe("MCP OAuth", () => {
       fetch(request) {
         if (request.method !== "POST" || new URL(request.url).pathname !== "/token")
           return new Response(null, { status: 404 })
-        return Response.json(
-          { error: "invalid_client", error_description: "bad_client_secret" },
-          { status: 400 },
-        )
+        return Response.json({ error: "invalid_client", error_description: "bad_client_secret" }, { status: 400 })
       },
     })
 

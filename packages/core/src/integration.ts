@@ -75,7 +75,10 @@ export type OAuthAuthorization = {
 export interface OAuthImplementation {
   readonly integrationID: ID
   readonly method: OAuthMethod
-  readonly authorize: (answer: Form.Answer) => Effect.Effect<OAuthAuthorization, unknown, Scope.Scope>
+  readonly authorize: (
+    answer: Form.Answer,
+    redirectURI?: string,
+  ) => Effect.Effect<OAuthAuthorization, unknown, Scope.Scope>
   readonly refresh?: (credential: Credential.OAuth) => Effect.Effect<Credential.OAuth, unknown>
   readonly label?: (credential: Credential.OAuth) => string | undefined
 }
@@ -227,6 +230,7 @@ export interface Interface extends State.Transformable<Editor> {
       readonly methodID: MethodID
       readonly answer?: Form.Answer
       readonly label?: string
+      readonly redirectURI?: string
     }) => Effect.Effect<Attempt, AuthorizationError>
     /** Returns the current state of an OAuth attempt. */
     readonly status: (input: {
@@ -587,6 +591,7 @@ const layer = Layer.effect(
       readonly methodID: MethodID
       readonly answer?: Form.Answer
       readonly label?: string
+      readonly redirectURI?: string
     }) {
       const method = state.get().integrations.get(input.integrationID)?.implementations.get(input.methodID)
       if (!method) {
@@ -598,7 +603,7 @@ const layer = Layer.effect(
         if (invalid) return yield* new AuthorizationError({ cause: new Error(invalid) })
       }
       const attemptScope = yield* Scope.fork(scope)
-      const authorization = yield* authorize(method.authorize(answer)).pipe(
+      const authorization = yield* authorize(method.authorize(answer, input.redirectURI)).pipe(
         Scope.provide(attemptScope),
         Effect.onExit((exit) => (Exit.isFailure(exit) ? Scope.close(attemptScope, exit) : Effect.void)),
       )

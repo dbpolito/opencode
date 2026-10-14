@@ -21,6 +21,8 @@ export const OAuthMethod = Schema.Struct({
   type: Schema.Literal("oauth"),
   label: Schema.String,
   form: optional(Form.Fields),
+  /** A pre-registered loopback callback; omitted when the client may choose an available port. */
+  redirectURI: optional(Schema.String),
 }).annotate({ identifier: "Integration.OAuthMethod" })
 
 export interface CommandMethod extends Schema.Schema.Type<typeof CommandMethod> {}
